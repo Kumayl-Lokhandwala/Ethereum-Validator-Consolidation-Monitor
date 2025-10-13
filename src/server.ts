@@ -5,23 +5,23 @@ import { PrismaClient } from "@prisma/client";
 import client from "prom-client";
 import logger from "./lib/logger.js";
 import { activeEventQueueGauge } from "./lib/metrics.js";
-import { getLastProcessedSlot, getStartTime } from "./lib/sharedState.js";
+import axios from "axios";
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
+const startTime = Date.now();
 
-// --- Observability Setup ---
 client.collectDefaultMetrics();
 
-// --- API Endpoints ---
 app.get("/health", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
-    const lastSlot = getLastProcessedSlot();
-    const uptime = (Date.now() - getStartTime()) / 1000; // in seconds
-
-    // A real lag calculation would need to fetch the current head, but this is a good proxy.
+    const state = await prisma.systemState.findUnique({
+      where: { id: "lastProcessedSlot" },
+    });
+    const lastSlot = state ? parseInt(state.value, 10) : 0;
+    const uptime = (Date.now() - startTime) / 1000;
     const lag = lastSlot > 0 ? `Processing slot ${lastSlot}` : "Initializing";
 
     res.status(200).json({
@@ -48,52 +48,64 @@ app.get("/metrics", async (req, res) => {
 
 app.get("/consolidations/active", async (req, res) => {
   try {
-    const activeEvents = await prisma.consolidationRequest.findMany({
-      where: {
-        // BUG FIX: Search for the correct status
-        status: "credential_change_detected",
-      },
-      orderBy: { createdAt: "asc" },
-    });
-    res.status(200).json(activeEvents);
+    const fullUrl = `${process.env.BEACON_NODE_URL}/eth/v1/beacon/states/head/pending_consolidations`;
+    const response = await axios.get(fullUrl);
+    res.status(200).json(response.data.data);
   } catch (e) {
-    logger.error({ err: e }, "Failed to fetch active events.");
-    res.status(500).json({ error: "Failed to fetch active events." });
+    logger.error(
+      { err: e },
+      "Failed to fetch active consolidations from Beacon API."
+    );
+    res.status(500).json({ error: "Failed to fetch active consolidations." });
   }
 });
 
 app.get("/validators/:id/history", async (req, res) => {
-  // ... (this endpoint code is fine as is, no changes needed)
+  try {
+    const validatorIndex = parseInt(req.params.id, 10);
+    if (isNaN(validatorIndex)) {
+      return res.status(400).json({ error: "Invalid validator index." });
+    }
+    const history = await prisma.consolidationRequest.findMany({
+      where: {
+        OR: [
+          { sourceValidatorIndex: validatorIndex },
+          { targetValidatorIndex: validatorIndex },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.status(200).json(history);
+  } catch (e) {
+    logger.error({ err: e }, "Failed to fetch validator history.");
+    res.status(500).json({ error: "Failed to fetch validator history." });
+  }
 });
 
 app.get("/queue/stats", async (req, res) => {
   try {
-    const queueLength = await prisma.consolidationRequest.count({
-      where: {
-        // BUG FIX: Search for the correct status
-        status: "credential_change_detected",
-      },
-    });
-
-    activeEventQueueGauge.set(queueLength); // Update the gauge metric
-
+    const fullUrl = `${process.env.BEACON_NODE_URL}/eth/v1/beacon/states/head/pending_consolidations`;
+    const response = await axios.get(fullUrl);
+    const queueLength = response.data.data.length;
+    activeEventQueueGauge.set(queueLength);
     const CHURN_LIMIT_PER_EPOCH = 8;
     const EPOCH_TIME_MINUTES = 6.4;
     const estimatedWaitMinutes =
       (queueLength / CHURN_LIMIT_PER_EPOCH) * EPOCH_TIME_MINUTES;
-
     res.status(200).json({
       queueLength,
       estimatedWaitTime: `${estimatedWaitMinutes.toFixed(2)} minutes`,
       churnRatePerDay: CHURN_LIMIT_PER_EPOCH * (1440 / EPOCH_TIME_MINUTES),
     });
   } catch (e) {
-    logger.error({ err: e }, "Failed to fetch queue statistics.");
+    logger.error(
+      { err: e },
+      "Failed to fetch queue statistics from Beacon API."
+    );
     res.status(500).json({ error: "Failed to fetch queue statistics." });
   }
 });
 
-// Start the server
 app.listen(PORT, () => {
   logger.info({ port: PORT }, `🚀 API Server is running`);
 });

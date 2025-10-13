@@ -27,4 +27,10 @@ model ConsolidationRequest {
   @@index([sourceValidatorIndex])
   @@index([targetValidatorIndex])
   @@index([status])
+  @@index([detectionEpoch]) // Add this line
+}
+
+model SystemState {
+  id    String @id
+  value String
 }

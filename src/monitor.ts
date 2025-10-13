@@ -5,13 +5,12 @@ import axios from "axios";
 import { PrismaClient } from "@prisma/client";
 import logger from "./lib/logger.js";
 import { eventsDetectedCounter, dataFetchCounter } from "./lib/metrics.js";
-import { setLastProcessedSlot } from "./lib/sharedState.js";
 
 const prisma = new PrismaClient();
 const BEACON_URL = process.env.BEACON_NODE_URL;
 
 if (!BEACON_URL) {
-  logger.fatal("BEACON_NODE_URL is not defined in the .env file");
+  logger.fatal("❌ BEACON_NODE_URL is not defined in the .env file");
   process.exit(1);
 }
 
@@ -24,19 +23,28 @@ async function fetchAndProcessBlock() {
       const fullUrl = `${BEACON_URL}/eth/v2/beacon/blocks/head`;
       logger.debug(`Fetching latest block from: ${fullUrl}`);
 
-      const response = await axios.get(fullUrl);
+      const response = await axios.get(fullUrl, { timeout: 8000 });
       dataFetchCounter.inc({ status: "success" });
 
       const slot = parseInt(response.data.data.message.slot, 10);
 
       if (lastProcessedSlot === 0) {
-        lastProcessedSlot = slot - 1; // Initialize on first run
+        const state = await prisma.systemState.findUnique({
+          where: { id: "lastProcessedSlot" },
+        });
+        lastProcessedSlot = state ? parseInt(state.value, 10) : slot - 1;
       }
 
       if (slot > lastProcessedSlot) {
-        logger.info({ slot }, `New block found!`);
+        logger.info({ slot }, `🧩 New block found!`);
         lastProcessedSlot = slot;
-        setLastProcessedSlot(slot); // Update shared state for health check
+
+        // Save the latest processed slot to the database
+        await prisma.systemState.upsert({
+          where: { id: "lastProcessedSlot" },
+          update: { value: slot.toString() },
+          create: { id: "lastProcessedSlot", value: slot.toString() },
+        });
 
         const credentialChanges =
           response.data.data.message.body.bls_to_execution_changes;
@@ -44,9 +52,8 @@ async function fetchAndProcessBlock() {
         if (credentialChanges && credentialChanges.length > 0) {
           logger.info(
             { count: credentialChanges.length, slot },
-            `Found credential change event(s)!`
+            `🔥🔥🔥 Found credential change event(s)!`
           );
-
           for (const change of credentialChanges) {
             const validatorIndex = parseInt(change.message.validator_index, 10);
             const newRecord = await prisma.consolidationRequest.create({
@@ -57,7 +64,7 @@ async function fetchAndProcessBlock() {
                 status: "credential_change_detected",
               },
             });
-            eventsDetectedCounter.inc(); // Increment metric
+            eventsDetectedCounter.inc();
             logger.info(
               { recordId: newRecord.id, validatorIndex },
               `📝 Saved event to database!`
@@ -72,18 +79,19 @@ async function fetchAndProcessBlock() {
       if (attempt === MAX_ATTEMPTS) {
         logger.error({ err: error }, "API fetch failed after all attempts.");
       }
+      await new Promise((r) => setTimeout(r, 2000));
     }
   }
 }
 
-function startMonitoring() {
+async function startMonitoring() {
   logger.info("🚀 Starting Ethereum Validator Monitor...");
   fetchAndProcessBlock();
-  setInterval(fetchAndProcessBlock, 12000); // Poll every 12 seconds
+  setInterval(fetchAndProcessBlock, 12000);
 }
 
 process.on("SIGINT", async () => {
-  logger.info("Shutting down, disconnecting from database...");
+  logger.info("🛑 Shutting down gracefully...");
   await prisma.$disconnect();
   process.exit(0);
 });
