@@ -6,8 +6,10 @@ import client from "prom-client";
 import logger from "./lib/logger.js";
 import { activeEventQueueGauge } from "./lib/metrics.js";
 import axios from "axios";
+import cors from "cors";
 
 const app = express();
+app.use(cors());
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 const startTime = Date.now();
