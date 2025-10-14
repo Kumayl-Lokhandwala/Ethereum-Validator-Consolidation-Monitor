@@ -10,6 +10,8 @@ This project is a real-time monitoring system designed to track validator consol
 
 - **API Base URL:** `https://luganode-task-22bce2975-production.up.railway.app`
 - **API Live Status (Health Check):** `https://luganode-task-22bce2975-production.up.railway.app/health`
+- **Grafana Dashboard:** `https://kumayllokhandwala04.grafana.net/dashboard/snapshot/RQalVXMFRaBEqiXxPwomQvMsztCJmKio`
+- **Demonstration Video:** `https://youtu.be/r0XcC9snMLI`
 
 ---
 
@@ -40,13 +42,13 @@ The application is architected as a distributed system composed of two primary s
 
 ## 5. API Documentation
 
-| Method | Endpoint                  | Description                                                                                                |
-| :----- | :------------------------ | :--------------------------------------------------------------------------------------------------------- |
-| `GET`  | `/health`                 | Provides the operational status of the API, database connectivity, and the monitor's current block height. |
-| `GET`  | `/metrics`                | Exposes application and system metrics in a Prometheus-compatible text format for consumption by Grafana.  |
-| `GET`  | `/consolidations/active`  | Fetches the current list of pending consolidations directly from the Beacon Chain for real-time accuracy.  |
-| `GET`  | `/queue/stats`            | Returns live statistics for the pending consolidation queue, including its length and estimated wait time. |
-| `GET`  | `/validators/:id/history` | Retrieves the historical event log for a specific validator index from the PostgreSQL database.            |
+| Method | Endpoint                  | Description                                                                                                      |
+| :----- | :------------------------ | :--------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/health`                 | Provides the operational status of the API, database connectivity, and the monitor's current block height.       |
+| `GET`  | `/metrics`                | Exposes application and system metrics in a structured JSON format, suitable for Grafana's JSON API data source. |
+| `GET`  | `/consolidations/active`  | Fetches the current list of pending consolidations directly from the Beacon Chain for real-time accuracy.        |
+| `GET`  | `/queue/stats`            | Returns live statistics for the pending consolidation queue, including its length and estimated wait time.       |
+| `GET`  | `/validators/:id/history` | Retrieves the historical event log for a specific validator index from the PostgreSQL database.                  |
 
 ---
 

@@ -1,5 +1,3 @@
-// File: src/monitor.ts
-
 import "dotenv/config";
 import axios from "axios";
 import { PrismaClient } from "@prisma/client";
@@ -39,7 +37,6 @@ async function fetchAndProcessBlock() {
         logger.info({ slot }, `🧩 New block found!`);
         lastProcessedSlot = slot;
 
-        // Save the latest processed slot to the database
         await prisma.systemState.upsert({
           where: { id: "lastProcessedSlot" },
           update: { value: slot.toString() },

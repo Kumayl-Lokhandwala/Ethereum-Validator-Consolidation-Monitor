@@ -1,5 +1,3 @@
-// File: src/server.ts
-
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import client from "prom-client";
@@ -43,14 +41,12 @@ app.get("/metrics", async (req, res) => {
   try {
     const metricsArray = await client.register.getMetricsAsJSON();
 
-    // Create a new object and place the array inside it
     const responseObject = {
       status: "success",
       timestamp: new Date().toISOString(),
-      metrics: metricsArray, // The array is now a property of this object
+      metrics: metricsArray,
     };
 
-    // Send the new object as the JSON response
     res.status(200).json(responseObject);
   } catch (e) {
     logger.error({ err: e }, "Failed to fetch metrics as JSON.");
