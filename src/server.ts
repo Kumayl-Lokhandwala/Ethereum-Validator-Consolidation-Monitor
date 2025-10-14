@@ -41,10 +41,11 @@ app.get("/health", async (req, res) => {
 
 app.get("/metrics", async (req, res) => {
   try {
-    res.set("Content-Type", client.register.contentType);
-    res.end(await client.register.metrics());
+    const metrics = await client.register.getMetricsAsJSON();
+    res.status(200).json(metrics);
   } catch (e) {
-    res.status(500).end(e);
+    logger.error({ err: e }, "Failed to fetch metrics as JSON.");
+    res.status(500).json({ error: "Failed to fetch metrics." });
   }
 });
 
