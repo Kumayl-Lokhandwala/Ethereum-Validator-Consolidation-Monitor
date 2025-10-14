@@ -110,5 +110,5 @@ app.get("/queue/stats", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  logger.info({ port: PORT }, `🚀 API Server is running`);
+  logger.info({ port: PORT }, `API Server is running`);
 });

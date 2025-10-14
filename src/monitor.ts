@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 const BEACON_URL = process.env.BEACON_NODE_URL;
 
 if (!BEACON_URL) {
-  logger.fatal("❌ BEACON_NODE_URL is not defined in the .env file");
+  logger.fatal("BEACON_NODE_URL is not defined in the .env file");
   process.exit(1);
 }
 
@@ -52,7 +52,7 @@ async function fetchAndProcessBlock() {
         if (credentialChanges && credentialChanges.length > 0) {
           logger.info(
             { count: credentialChanges.length, slot },
-            `🔥🔥🔥 Found credential change event(s)!`
+            `Found credential change event(s)!`
           );
           for (const change of credentialChanges) {
             const validatorIndex = parseInt(change.message.validator_index, 10);
@@ -67,7 +67,7 @@ async function fetchAndProcessBlock() {
             eventsDetectedCounter.inc();
             logger.info(
               { recordId: newRecord.id, validatorIndex },
-              `📝 Saved event to database!`
+              `Saved event to database!`
             );
           }
         }
@@ -85,13 +85,13 @@ async function fetchAndProcessBlock() {
 }
 
 async function startMonitoring() {
-  logger.info("🚀 Starting Ethereum Validator Monitor...");
+  logger.info("Starting Ethereum Validator Monitor...");
   fetchAndProcessBlock();
   setInterval(fetchAndProcessBlock, 12000);
 }
 
 process.on("SIGINT", async () => {
-  logger.info("🛑 Shutting down gracefully...");
+  logger.info("Shutting down gracefully...");
   await prisma.$disconnect();
   process.exit(0);
 });
