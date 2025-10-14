@@ -41,8 +41,17 @@ app.get("/health", async (req, res) => {
 
 app.get("/metrics", async (req, res) => {
   try {
-    const metrics = await client.register.getMetricsAsJSON();
-    res.status(200).json(metrics);
+    const metricsArray = await client.register.getMetricsAsJSON();
+
+    // Create a new object and place the array inside it
+    const responseObject = {
+      status: "success",
+      timestamp: new Date().toISOString(),
+      metrics: metricsArray, // The array is now a property of this object
+    };
+
+    // Send the new object as the JSON response
+    res.status(200).json(responseObject);
   } catch (e) {
     logger.error({ err: e }, "Failed to fetch metrics as JSON.");
     res.status(500).json({ error: "Failed to fetch metrics." });
