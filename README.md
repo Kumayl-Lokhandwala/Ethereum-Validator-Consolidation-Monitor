@@ -21,6 +21,10 @@ The application is architected as a distributed system composed of two primary s
 
 2.  **Web Service (`server.ts`):** A public-facing REST API built with Express.js. This service provides endpoints for querying system status, historical data, and live queue statistics. For real-time queue data, the API queries the Beacon Chain directly. It also exposes a `/metrics` endpoint in Prometheus format for external observability tools like Grafana.
 
+### Data Flow Diagram
+
+![Data Flow Diagram](./assets/data-flow-diagram.png)
+
 ## 4. Features Implemented
 
 - **Real-Time Event Detection:** Monitors the Beacon Chain for new blocks and parses them for consolidation-related events.
