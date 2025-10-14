@@ -23,7 +23,7 @@ The application is architected as a distributed system composed of two primary s
 
 ### Data Flow Diagram
 
-![Data Flow Diagram](./assets/data-flow-diagram.png)
+![System Data Flow Diagram](./assets/data-flow-diagram.png)
 
 ## 4. Features Implemented
 
@@ -62,12 +62,27 @@ The application is architected as a distributed system composed of two primary s
 
 ---
 
-## 7. Future Considerations
+## 7. External Services
+
+This project relies on the public **Ethereum Beacon Chain API** to fetch real-time blockchain data. All API interactions are directed to the URL specified in the `BEACON_NODE_URL` environment variable.
+
+- **`GET /eth/v2/beacon/blocks/head`**
+
+  - **Usage:** Polled by the `Background Worker` (`monitor.ts`) every 12 seconds.
+  - **Purpose:** To fetch the latest sealed block and scan it for `bls_to_execution_changes` events, which indicate validator consolidations.
+
+- **`GET /eth/v1/beacon/states/head/pending_consolidations`**
+  - **Usage:** Queried by the `Web Service` (`server.ts`) for the `/consolidations/active` and `/queue/stats` endpoints.
+  - **Purpose:** To retrieve the current list of pending consolidation requests directly from the chain's state for live queue analysis.
+
+---
+
+## 8. Future Considerations
 
 - **Data Archiving Strategy:** For long-term operation, a data lifecycle policy would be implemented. A periodic job would migrate historical event data older than a defined threshold (e.g., 12 months) from the primary database to a cost-effective cold storage solution, such as AWS S3 Glacier, while maintaining queryability.
 - **Enhanced Alerting Integration:** The existing alerting rules in Grafana would be integrated with a dedicated incident response platform (e.g., PagerDuty, Opsgenie) to provide automated, tiered notifications for critical system alerts, such as a significant monitor lag or a surge in API failures.
 
-## 8. How to Run Locally
+## 9. How to Run Locally
 
 ### Prerequisites
 
@@ -138,8 +153,3 @@ The application is architected as a distributed system composed of two primary s
   ```bash
   pm2 list
   ```
-- To view live logs from both services, use:
-  ```bash
-  pm2 logs
-  ```
-- To test the API, open your browser and navigate to `http://localhost:3000/health`. You should see a successful JSON response indicating that the server is running and connected to the database.
