@@ -8,8 +8,8 @@ This project is a real-time monitoring system designed to track validator consol
 
 ## 2. Live Endpoints
 
-- **API Base URL:** `https://luganode-task-22bce2975-production.up.railway.app`
-- **API Live Status (Health Check):** `https://luganode-task-22bce2975-production.up.railway.app/health`
+- **API Base URL:** `https://luganodetask22bce2975.up.railway.app`
+- **API Live Status (Health Check):** `https://luganodetask22bce2975.up.railway.app/health`
 - **Grafana Dashboard:** `https://kumayllokhandwala04.grafana.net/dashboard/snapshot/RQalVXMFRaBEqiXxPwomQvMsztCJmKio`
 - **Demonstration Video:** `https://youtu.be/r0XcC9snMLI`
 
