@@ -6,16 +6,7 @@ This project is a real-time monitoring system designed to track validator consol
 
 ---
 
-## 2. Live Endpoints
-
-- **API Base URL:** `https://luganodetask22bce2975.up.railway.app`
-- **API Live Status (Health Check):** `https://luganodetask22bce2975.up.railway.app/health`
-- **Grafana Dashboard:** `https://kumayllokhandwala04.grafana.net/dashboard/snapshot/RQalVXMFRaBEqiXxPwomQvMsztCJmKio`
-- **Demonstration Video:** `https://youtu.be/r0XcC9snMLI`
-
----
-
-## 3. System Architecture
+## 2. System Architecture
 
 The application is architected as a distributed system composed of two primary services, ensuring a clear separation of concerns between data collection and data presentation.
 
@@ -27,7 +18,7 @@ The application is architected as a distributed system composed of two primary s
 
 ![System Data Flow Diagram](./assets/data-flow-diagram.png)
 
-## 4. Features Implemented
+## 3. Features Implemented
 
 - **Real-Time Event Detection:** Monitors the Beacon Chain for new blocks and parses them for consolidation-related events.
 - **Resilient State Management:** The monitor service persists its last processed slot to the database, enabling a seamless resume after restarts and preventing missed blocks.
@@ -40,7 +31,7 @@ The application is architected as a distributed system composed of two primary s
 
 ---
 
-## 5. API Documentation
+## 4. API Documentation
 
 | Method | Endpoint                  | Description                                                                                                      |
 | :----- | :------------------------ | :--------------------------------------------------------------------------------------------------------------- |
@@ -52,7 +43,7 @@ The application is architected as a distributed system composed of two primary s
 
 ---
 
-## 6. Technology Stack
+## 5. Technology Stack
 
 - **Language:** TypeScript
 - **Runtime:** Node.js
@@ -64,7 +55,7 @@ The application is architected as a distributed system composed of two primary s
 
 ---
 
-## 7. External Services
+## 6. External Services
 
 This project relies on the public **Ethereum Beacon Chain API** to fetch real-time blockchain data. All API interactions are directed to the URL specified in the `BEACON_NODE_URL` environment variable.
 
@@ -79,12 +70,12 @@ This project relies on the public **Ethereum Beacon Chain API** to fetch real-ti
 
 ---
 
-## 8. Future Considerations
+## 7. Future Considerations
 
 - **Data Archiving Strategy:** For long-term operation, a data lifecycle policy would be implemented. A periodic job would migrate historical event data older than a defined threshold (e.g., 12 months) from the primary database to a cost-effective cold storage solution, such as AWS S3 Glacier, while maintaining queryability.
 - **Enhanced Alerting Integration:** The existing alerting rules in Grafana would be integrated with a dedicated incident response platform (e.g., PagerDuty, Opsgenie) to provide automated, tiered notifications for critical system alerts, such as a significant monitor lag or a surge in API failures.
 
-## 9. How to Run Locally
+## 8. How to Run Locally
 
 ### Prerequisites
 
